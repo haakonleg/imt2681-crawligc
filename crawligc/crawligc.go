@@ -21,9 +21,6 @@ var crawledLinksLock sync.Mutex
 // Regex to match links
 var linkMatcher = regexp.MustCompile("<a\\s+[^>]*href=\"([^\"]+)\"")
 
-// Channel containing urls to crawl
-var urlsToCrawl = make(chan string)
-
 // CrawlIGC starts the crawler and prints results
 func CrawlIGC(baseURL string, url string) {
 	var wg sync.WaitGroup
