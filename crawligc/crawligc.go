@@ -21,6 +21,12 @@ var crawledLinksLock sync.Mutex
 // Regex to match links
 var linkMatcher = regexp.MustCompile("<a\\s+[^>]*href=\"([^\"]+)\"")
 
+// URL allowed characters
+const RFC3986 = "a-zA-Z0-9-._~:/?#\\[\\]@!$'\\(\\)*+,;="
+
+// Regex to match IGC
+var igcMatcher = regexp.MustCompile("(?i)[^" + RFC3986 + "]([" + RFC3986 + "]+\\.igc)")
+
 // CrawlIGC starts the crawler and prints results
 func CrawlIGC(baseURL string, url string) {
 	var wg sync.WaitGroup
@@ -76,16 +82,20 @@ func crawl(baseURL string, url string, wg *sync.WaitGroup) {
 // Finds all IGC links and other links
 func findURLs(body []byte) (igcLinks, links []string) {
 	urls := linkMatcher.FindAllStringSubmatch(string(body), -1)
+	igcs := igcMatcher.FindAllStringSubmatch(string(body), -1)
+
 	igcLinks = make([]string, 0, len(urls))
 	links = make([]string, 0, len(urls))
 
 	for _, url := range urls {
 		foundURL := url[1]
-		if isLinkIGC(foundURL) {
-			igcLinks = append(igcLinks, foundURL)
-		} else {
+		if !isLinkIGC(foundURL) {
 			links = append(links, foundURL)
 		}
+	}
+
+	for _, igc := range igcs {
+		igcLinks = append(igcLinks, igc[1])
 	}
 
 	return igcLinks, links
